@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>8-bit Rocket Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.1.1/pixi.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <script>
+
+      (async () => {
+        // Setup Pixi.js
+        const {Application, Assets, Sprite, Loader} = PIXI
+        const app = new Application({background: '#1099bb', resizeTo: window});
+        document.body.appendChild(app.view);
+
+        let flying = false, speed = 0, gravity = 0.1;
+        const rocketTexture = await Assets.load('./assets/rocket.png');
+        const flamesTexture = await Assets.load('./assets/flames.png');
+        const starTexture = await Assets.load('./assets/star.png');
+        const starsLayer1 = [];
+        const starsLayer2 = [];
+        function setup() {
+             for (let i = 0; i < 200; i++) {
+              let star = new Sprite(starTexture);
+              star.anchor.set(0.5);
+              star.transform.scale.set(0.2);
+              star.x = Math.random() * app.view.width;
+              star.y = Math.random() * app.view.height;
+              star.speed = Math.random() * 2 + 1;
+              starsLayer1.push(star);
+              app.stage.addChild(star);
+          }
+            const rocket = new Sprite(rocketTexture);
+            rocket.anchor.set(0.5, 1);
+            rocket.transform.scale.set(0.2);
+            rocket.x = app.view.width / 2;
+            rocket.y = app.view.height - rocket.height / 2;
+            app.stage.addChild(rocket);
+
+            // Create flames sprite
+            flames = new Sprite(flamesTexture);
+            flames.anchor.set(0.5, 0);
+            flames.x = rocket.x;
+            flames.y = rocket.y + rocket.height / 2;
+            flames.visible = false;
+            app.stage.addChild(flames);
+
+           
+
+            // Keyboard events
+            window.addEventListener("keydown", () => { flying = true; flames.visible = true; });
+            window.addEventListener("keyup", () => { flying = false; flames.visible = false; });
+
+            // Start game loop
+            app.ticker.add(gameLoop);
+        }
+
+        setup()
+
+        `function gameLoop(delta) {
+            // Update rocket position
+            if (flying) {
+                speed += 0.2; // Increase speed while flying
+            } else {
+                speed -= gravity; // Apply gravity
+                if (speed < 0) speed = 0;
+            }
+            rocket.y -= speed;
+            flames.y = rocket.y + rocket.height / 2;
+
+            // Keep rocket in bounds
+            if (rocket.y < rocket.height / 2) rocket.y = rocket.height / 2;
+            if (rocket.y > app.view.height - rocket.height / 2) rocket.y = app.view.height - rocket.height / 2;
+
+            // Update stars
+            for (let star of stars) {
+                star.y += star.speed * (speed / 5);
+                if (star.y > app.view.height) star.y = 0;
+            }
+        }`
+      })()
+    </script>
+</body>
+</html>
