@@ -21,7 +21,7 @@
 
       let score = 0;
       let flying = false, speed = 0, gravity = 0.1;
-      const MAX_ROCKET_SPEED = 30
+      const MAX_ROCKET_SPEED = 30, CLOSER_STARS_SCALE = 0.3, FURTHER_STARS_SCALE = 0.2;
       const rocketTexture = await Assets.load('./assets/rocket.png');
       const flamesSmallTexture = await Assets.load('./assets/flames_small.png');
       const flamesMedTexture = await Assets.load('./assets/flames_med.png');
@@ -58,7 +58,7 @@
         }
       }
 
-      const createStar = (sprite) => (scale = 0.2, speed = starsCloserSpeed) => {
+      const createStar = (sprite) => (scale = FURTHER_STARS_SCALE, speed = starsCloserSpeed) => {
         const star = new Sprite(starTexture);
         star.anchor.set(0.5);
         star.x = Math.random() * app.view.width;
@@ -70,8 +70,8 @@
       }
 
       function setup() {
-        starsFurther = starsFurther.map(el => createStar(el)(0.1, starsCloserSpeed))
-        starsCloser = starsCloser.map(el => createStar(el)(0.2, starsFurtherSpeed))
+        starsFurther = starsFurther.map(el => createStar(el)(FURTHER_STARS_SCALE, starsCloserSpeed))
+        starsCloser = starsCloser.map(el => createStar(el)(CLOSER_STARS_SCALE, starsFurtherSpeed))
 
         rocket = new Sprite(rocketTexture);
         rocket.anchor.set(0.5, 1);
@@ -89,8 +89,17 @@
         flames.visible = false;
         app.stage.addChild(flames);
 
-        window.addEventListener("keydown", () => { flying = true; flames.visible = true; });
-        window.addEventListener("keyup", () => { flying = false; flames.visible = false; });
+        window.addEventListener("keydown", (e) => {
+          if ((e.key === "ArrowUp" || e.key === " ")) {
+            flying = true;
+            flames.visible = true;
+          }
+        });
+        window.addEventListener("keyup", (e) => {
+          if ((e.key === "ArrowUp" || e.key === " ")) {
+            flying = false; flames.visible = false;
+          }
+        });
 
         scoreText.x = app.view.width - (1.5 * scoreText.width)
         scoreText.y = scoreText.height
