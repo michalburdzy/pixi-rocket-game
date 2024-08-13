@@ -20,6 +20,8 @@
       const app = new Application({ background: '#1099bb', resizeTo: window });
       document.body.appendChild(app.view);
 
+      let score = 0;
+
       let flying = false, speed = 0, gravity = 0.1;
       const rocketTexture = await Assets.load('./assets/rocket.png');
       const flamesTexture = await Assets.load('./assets/flames.png');
@@ -29,14 +31,16 @@
       let starsCloserSpeed = 0
       let starsFurtherSpeed = 0
 
-      let canChangeSpeed = true
-      const speedChangeInterval = 100
-      let canChangeSpeedTimeout = setTimeout(() => canChangeSpeed = true, speedChangeInterval)
+      const style = new PIXI.TextStyle({
+        fontFamily: "\"Trebuchet MS\", Helvetica, sans-serif",
+        fontWeight: 900,
+        fontSize: 40,
+        fill: "white",
+      });
+      let scoreText = new PIXI.Text(`score: ${score}`, style);
+      let speedText = new PIXI.Text(`speed: ${starsCloserSpeed}`, style);
 
       const increaseSpeed = (factor = 0.2) => {
-        if (!canChangeSpeed) return
-        canChangeSpeed = false
-
         if (starsCloserSpeed >= 20) {
           return
         }
@@ -44,9 +48,6 @@
         starsFurtherSpeed = starsCloserSpeed / 1.3
       }
       const decreaseSpeed = (factor = 0.2) => {
-        if (!canChangeSpeed) return
-        canChangeSpeed = false
-
         if (starsCloserSpeed <= 0) {
           starsCloserSpeed = 0
           starsFurtherSpeed = 0
@@ -90,6 +91,13 @@
         window.addEventListener("keydown", () => { flying = true; flames.visible = true; });
         window.addEventListener("keyup", () => { flying = false; flames.visible = false; });
 
+        scoreText.x = app.view.width - (1.5 * scoreText.width)
+        scoreText.y = scoreText.height
+        app.stage.addChild(scoreText);
+        speedText.x = 50
+        speedText.y = speedText.height
+        app.stage.addChild(speedText);
+
         app.ticker.add(gameLoop);
       }
 
@@ -99,10 +107,16 @@
         if (flying) {
           increaseSpeed();
         } else {
-          decreaseSpeed();
+          decreaseSpeed(0.1);
         }
-        canChangeSpeedTimeout = setTimeout(() => canChangeSpeed = true, speedChangeInterval)
+        scoreText.text = `score: ${Math.round(score)}`
+        speedText.text = `speed: ${Math.round(starsCloserSpeed)}`
 
+        if (score === 0 && starsCloserSpeed > 0) {
+          score = 1
+        } else {
+          score = score + starsCloserSpeed / 100
+        }
         starsFurther.forEach(star => {
           star.speed = starsFurtherSpeed;
           star.y += star.speed;
