@@ -14,20 +14,21 @@
 
 <body>
   <script>
-
     (async () => {
       const { Application, Assets, Sprite, Loader } = PIXI
-      const app = new Application({ background: '#1099bb', resizeTo: window });
+      const app = new Application({ background: '#00004B', resizeTo: window });
       document.body.appendChild(app.view);
 
       let score = 0;
-
       let flying = false, speed = 0, gravity = 0.1;
+      const MAX_ROCKET_SPEED = 30
       const rocketTexture = await Assets.load('./assets/rocket.png');
-      const flamesTexture = await Assets.load('./assets/flames.png');
+      const flamesSmallTexture = await Assets.load('./assets/flames_small.png');
+      const flamesMedTexture = await Assets.load('./assets/flames_med.png');
+      const flamesBigTexture = await Assets.load('./assets/flames_big.png');
       const starTexture = await Assets.load('./assets/star.png');
       let starsFurther = new Array(100).fill(new Sprite(starTexture));
-      let starsCloser = new Array(30).fill(new Sprite(starTexture));
+      let starsCloser = new Array(20).fill(new Sprite(starTexture));
       let starsCloserSpeed = 0
       let starsFurtherSpeed = 0
 
@@ -40,8 +41,8 @@
       let scoreText = new PIXI.Text(`score: ${score}`, style);
       let speedText = new PIXI.Text(`speed: ${starsCloserSpeed}`, style);
 
-      const increaseSpeed = (factor = 0.2) => {
-        if (starsCloserSpeed >= 20) {
+      const increaseSpeed = (factor = 0.1) => {
+        if (starsCloserSpeed >= MAX_ROCKET_SPEED) {
           return
         }
         starsCloserSpeed = Math.round((starsCloserSpeed + factor) * 100) / 100
@@ -70,21 +71,21 @@
 
       function setup() {
         starsFurther = starsFurther.map(el => createStar(el)(0.1, starsCloserSpeed))
-        starsCloser = starsCloser.map(el => createStar(el)(0.3, starsFurtherSpeed))
+        starsCloser = starsCloser.map(el => createStar(el)(0.2, starsFurtherSpeed))
 
         rocket = new Sprite(rocketTexture);
         rocket.anchor.set(0.5, 1);
         rocket.transform.scale.set(0.2);
         rocket.x = app.view.width / 2;
-        rocket.y = app.view.height - rocket.height / 2;
+        rocket.y = app.view.height - rocket.height;
         app.stage.addChild(rocket);
 
         // Create flames sprite
-        flames = new Sprite(flamesTexture);
+        flames = new Sprite(flamesSmallTexture);
         flames.transform.scale.set(0.2);
         flames.anchor.set(0.5, 1);
         flames.x = rocket.x
-        flames.y = rocket.y + rocket.height / 2;
+        flames.y = rocket.y + flames.height
         flames.visible = false;
         app.stage.addChild(flames);
 
@@ -107,7 +108,7 @@
         if (flying) {
           increaseSpeed();
         } else {
-          decreaseSpeed(0.1);
+          decreaseSpeed();
         }
         scoreText.text = `score: ${Math.round(score)}`
         speedText.text = `speed: ${Math.round(starsCloserSpeed)}`
@@ -127,14 +128,42 @@
         });
 
         starsCloser.forEach(star => {
+          switch (true) {
+            case (starsCloserSpeed > 5 && starsCloserSpeed < 10):
+              star.transform.scale.y = 0.5;
+              break
+            case (starsCloserSpeed > 10 && starsCloserSpeed < 15):
+              star.transform.scale.y = 0.7;
+              break
+            case (starsCloserSpeed > 15):
+              star.transform.scale.y = 1;
+              break
+            default:
+              star.transform.scale.y = 0.3;
+          }
+
+
+          if (starsCloserSpeed > MAX_ROCKET_SPEED * 0.5 && starsCloserSpeed < MAX_ROCKET_SPEED * 0.85) {
+            flames.texture = flamesMedTexture;
+            flames.y = rocket.y + flames.height
+
+          } else if (starsCloserSpeed > MAX_ROCKET_SPEED * 0.85) {
+            flames.texture = flamesBigTexture;
+            flames.y = rocket.y + flames.height
+
+          } else {
+            flames.texture = flamesSmallTexture;
+            flames.y = rocket.y + flames.height
+
+          }
+
           star.speed = starsCloserSpeed;
           star.y += star.speed;
           if (star.y > app.view.height) {
-            star.y = 0;
+            star.y = 0 - Math.random() * 10
             star.x = Math.random() * app.view.width;
           }
         });
-
 
 
         if (flying) {
